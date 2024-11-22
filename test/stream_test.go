@@ -8,11 +8,12 @@ import (
 	"testing"
 	"time"
 
+	goredis "github.com/redis/go-redis/v9"
 	"github.com/runreveal/kawa"
 	"github.com/runreveal/kawa/x/memory"
 	"github.com/runreveal/kawa/x/mqtt"
-
 	"github.com/runreveal/kawa/x/printer"
+	"github.com/runreveal/kawa/x/redis"
 	"github.com/runreveal/kawa/x/scanner"
 	"github.com/segmentio/ksuid"
 	"github.com/stretchr/testify/assert"
@@ -38,6 +39,24 @@ func BenchmarkMem(b *testing.B) {
 		err := runner.Run(context.Background())
 		assert.NoError(b, err)
 	}
+}
+
+func TestRedis(t *testing.T) {
+	rc := goredis.NewClient(&goredis.Options{
+		Addr:     "localhost:6379", // Redis server address
+		Password: "",               // No password set
+		DB:       0,                // Use default DB
+	})
+	_, err := rc.XGroupCreateMkStream(context.Background(), "kawa/topic", "kawa", "$").Result()
+	if err != nil {
+		fmt.Println("err initing", err)
+	}
+
+	time.Sleep(1 * time.Second)
+
+	src := redis.NewSource(redis.WithAddr("localhost:6379"), redis.WithTopic("kawa/topic"))
+	dst := redis.NewDestination(redis.WithAddr("localhost:6379"), redis.WithTopic("kawa/topic"))
+	SuiteTest(t, src, dst)
 }
 
 func TestIO(t *testing.T) {

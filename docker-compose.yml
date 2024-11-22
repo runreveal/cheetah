@@ -1,6 +1,9 @@
----
-version: '2'
 services:
+  redis:
+    image: docker.io/library/redis
+    ports:
+      - "6379:6379"
+
   mosquitto:
     image: eclipse-mosquitto:latest
     container_name: mosquitto

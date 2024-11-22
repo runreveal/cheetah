@@ -44,15 +44,14 @@ func SuiteTest(t *testing.T, src kawa.Source[[]byte], dst kawa.Destination[[]byt
 			if !errors.Is(err, context.Canceled) {
 				assert.NoError(t, err)
 			}
-			if ack != nil {
-				ack()
-			}
+			kawa.Ack(ack)
 			// fmt.Println("received:")
 			// stdoutDumper.Write([]byte(msg.Value))
 			// fmt.Printf("\n")
 			mark(t, msg.Value, want, seen)
 			count++
 			if count == len(want) {
+				time.Sleep(100 * time.Millisecond)
 				break
 			}
 		}
@@ -83,7 +82,7 @@ func SuiteTest(t *testing.T, src kawa.Source[[]byte], dst kawa.Destination[[]byt
 	assert.NoError(t, err)
 
 	for i := range seen {
-		assert.True(t, seen[i], "we should have seen all messages")
+		assert.True(t, seen[i], "we should have seen all messages, missing: %d", i)
 	}
 }
 
